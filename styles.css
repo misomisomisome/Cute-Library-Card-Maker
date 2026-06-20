@@ -1,0 +1,450 @@
+/* ============================================
+   LIBRARY CARD MAKER — styles.css
+   Original card aesthetic preserved exactly.
+   Editor panel added in the same vintage,
+   handwritten-script, checkout-card voice.
+   ============================================ */
+
+/* --- Google Fonts Import --- */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=IM+Fell+English:ital@0;1&display=swap');
+
+/* --- CSS Custom Properties (Tokens) --- */
+:root {
+  --cream:       #f5f0e8;
+  --cream-dark:  #ede7d5;
+  --line-blue:   #a8c4d8;
+  --pink-main:   #f72585;
+  --pink-light:  #ff6eb4;
+  --ink-navy:    #1a2340;
+  --ink-light:   #3a4a6b;
+  --border:      #c8b99a;
+  --card-shadow: 0 8px 40px rgba(30, 20, 10, 0.18), 0 2px 8px rgba(30, 20, 10, 0.10);
+}
+
+/* --- Reset & Base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--cream-dark);
+  background-image:
+    radial-gradient(ellipse at 20% 80%, #e8dfc8 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, #ddd5c0 0%, transparent 60%);
+  font-family: 'IM Fell English', Georgia, serif;
+  padding: 2rem;
+}
+
+/* ============================================
+   APP SHELL — two-column layout: editor + card
+   ============================================ */
+.app-shell {
+  max-width: 920px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
+   EDITOR PANEL — styled like a catalog drawer
+   label: cream stock, navy ink, pink accent
+   ============================================ */
+.editor-panel {
+  position: relative;
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 2px;
+  box-shadow: var(--card-shadow);
+  padding: 28px 28px 22px;
+}
+
+.editor-stamp {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-light);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  transform: rotate(3deg);
+  opacity: 0.8;
+}
+
+.editor-title {
+  font-family: 'Dancing Script', cursive;
+  font-weight: 700;
+  font-size: 2.1rem;
+  color: var(--pink-main);
+  filter: drop-shadow(1px 2px 0px rgba(247, 37, 133, 0.18));
+  margin-bottom: 4px;
+}
+
+.editor-sub {
+  font-size: 0.72rem;
+  color: var(--ink-light);
+  font-style: italic;
+  margin-bottom: 22px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--line-blue);
+}
+
+.field-group {
+  margin-bottom: 16px;
+}
+
+.field-group label {
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  margin-bottom: 5px;
+}
+
+.field-group input[type="text"],
+.field-group textarea {
+  width: 100%;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 0.92rem;
+  color: var(--ink-navy);
+  background: #fffdf8;
+  border: none;
+  border-bottom: 1.5px solid var(--line-blue);
+  padding: 6px 2px;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  resize: vertical;
+}
+
+.field-group input[type="text"]:focus,
+.field-group textarea:focus {
+  border-bottom-color: var(--pink-main);
+  background: #fffef9;
+}
+
+.field-hint {
+  font-size: 0.6rem;
+  color: var(--ink-light);
+  opacity: 0.75;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* --- Buttons --- */
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.btn {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  border-radius: 2px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--pink-main);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background: var(--pink-main);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(247, 37, 133, 0.28);
+}
+
+.btn-primary:hover {
+  background: #e01e78;
+}
+
+.btn-secondary {
+  background: var(--cream);
+  color: var(--ink-navy);
+  border-color: var(--border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--ink-light);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-light);
+  border-color: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.btn-ghost:hover {
+  color: var(--pink-main);
+}
+
+.editor-footnote {
+  margin-top: 18px;
+  font-size: 0.58rem;
+  color: var(--ink-light);
+  opacity: 0.7;
+  line-height: 1.5;
+}
+
+/* ============================================
+   CARD STAGE — centers the original card
+   ============================================ */
+.card-stage {
+  position: sticky;
+  top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+/* ============================================
+   ORIGINAL CARD STYLES — unchanged
+   ============================================ */
+.library-card {
+  width: 360px;
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 2px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  position: relative;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 27px,
+      var(--line-blue) 27px,
+      var(--line-blue) 28.5px
+    );
+  background-size: 100% 28.5px;
+  background-position: 0 120px;
+  animation: cardReveal 0.6s ease-out both;
+}
+
+@keyframes cardReveal {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+.card-header {
+  background: var(--cream);
+  text-align: center;
+  padding: 18px 20px 14px;
+  border-bottom: 2px solid var(--line-blue);
+  position: relative;
+  z-index: 2;
+}
+
+.card-header .rule-top {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-navy);
+  line-height: 1.55;
+  font-weight: 400;
+}
+
+.card-header .rule-top strong {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+}
+
+.card-header .rule-sub {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 0.52rem;
+  color: var(--ink-light);
+  line-height: 1.6;
+  margin-top: 7px;
+  font-style: italic;
+  max-width: 240px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.card-fields {
+  padding: 0 16px;
+  position: relative;
+  z-index: 2;
+}
+
+.field-row {
+  display: flex;
+  align-items: flex-end;
+  height: 28.5px;
+  border-bottom: none;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.field-row .field-label {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 0.52rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  width: 68px;
+  flex-shrink: 0;
+  padding-bottom: 4px;
+}
+
+.field-row .field-value {
+  font-family: 'Dancing Script', cursive;
+  font-size: 1.05rem;
+  color: var(--ink-navy);
+  padding-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quote-block {
+  position: relative;
+  padding: 10px 18px 24px 22px;
+  z-index: 2;
+  min-height: 260px;
+}
+
+.quote-text {
+  font-family: 'Dancing Script', cursive;
+  font-size: 2.15rem;
+  font-weight: 700;
+  color: var(--pink-main);
+  line-height: 1.22;
+  clip-path: inset(0 100% 0 0);
+  animation: writeIn 2.2s cubic-bezier(0.4, 0, 0.2, 1) 0.5s forwards;
+  filter: drop-shadow(1px 2px 0px rgba(247, 37, 133, 0.18));
+}
+
+@keyframes writeIn {
+  0%   { clip-path: inset(0 100% 0 0); }
+  100% { clip-path: inset(0 0%   0 0); }
+}
+
+.heart {
+  position: absolute;
+  font-size: 1.3rem;
+  color: var(--pink-main);
+  opacity: 0;
+  animation: heartPop 0.4s ease-out forwards;
+}
+
+.heart-1 {
+  bottom: 130px;
+  left: 16px;
+  animation-delay: 1.8s;
+}
+
+.heart-2 {
+  top: 70px;
+  right: 24px;
+  font-size: 1rem;
+  animation-delay: 2.2s;
+}
+
+@keyframes heartPop {
+  0%   { opacity: 0; transform: scale(0.4) rotate(-15deg); }
+  60%  { opacity: 1; transform: scale(1.2) rotate(5deg); }
+  100% { opacity: 1; transform: scale(1)   rotate(0deg); }
+}
+
+.flourish {
+  display: block;
+  width: 80%;
+  margin: 4px auto 0 0;
+  height: 10px;
+  opacity: 0;
+  animation: fadeUp 0.5s ease-out 2.6s forwards;
+}
+
+.flourish path {
+  stroke: var(--pink-main);
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+.library-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.22) 0%,
+    transparent 50%,
+    rgba(200,185,154,0.08) 100%
+  );
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* --- Responsive --- */
+@media (max-width: 420px) {
+  body { padding: 1rem; }
+  .library-card { width: 100%; }
+  .quote-text { font-size: 1.75rem; }
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .library-card,
+  .quote-text,
+  .heart,
+  .flourish {
+    animation: none;
+    opacity: 1;
+    clip-path: none;
+  }
+}
+
+/* --- Print: card only --- */
+@media print {
+  body {
+    background: #fff;
+    padding: 0;
+  }
+  .editor-panel {
+    display: none;
+  }
+  .app-shell {
+    display: block;
+  }
+  .card-stage {
+    position: static;
+  }
+  .library-card {
+    box-shadow: none;
+    margin: 0 auto;
+  }
+}

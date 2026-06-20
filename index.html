@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Library Card Maker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- ============ EDITOR PANEL ============ -->
+    <section class="editor-panel" aria-label="Card editor">
+      <div class="editor-stamp">No. 1</div>
+      <h1 class="editor-title">Catalog&nbsp;Card&nbsp;Maker</h1>
+      <p class="editor-sub">Fill in the slip below — the card on the right updates to match.</p>
+
+      <form id="card-form" autocomplete="off">
+        <div class="field-group">
+          <label for="input-author">Author</label>
+          <input type="text" id="input-author" maxlength="40" placeholder="e.g. Frances Hodgson Burnett" />
+        </div>
+
+        <div class="field-group">
+          <label for="input-title">Title</label>
+          <input type="text" id="input-title" maxlength="48" placeholder="e.g. The Secret Garden" />
+        </div>
+
+        <div class="field-group">
+          <label for="input-date">Date Due</label>
+          <input type="text" id="input-date" maxlength="24" placeholder="e.g. June 20" />
+        </div>
+
+        <div class="field-group">
+          <label for="input-quote">Dedication / quote</label>
+          <textarea id="input-quote" maxlength="160" rows="5" placeholder="One line per row, like the card&#10;Between&#10;the pages&#10;of a book&#10;is a lovely&#10;place to be.">Between
+the pages
+of a book
+is a lovely
+place to be.</textarea>
+          <p class="field-hint">Press Enter for a new line — short lines look best.</p>
+        </div>
+
+        <div class="button-row">
+          <button type="submit" class="btn btn-primary">Update Card</button>
+          <button type="button" id="btn-download" class="btn btn-secondary">Download as Image</button>
+          <button type="button" id="btn-print" class="btn btn-secondary">Print</button>
+          <button type="button" id="btn-reset" class="btn btn-ghost">Reset</button>
+        </div>
+      </form>
+
+      <p class="editor-footnote">
+        Everything here stays on your device — nothing is sent anywhere. Text is rendered as plain text, never as code, so pasted content can't run scripts.
+      </p>
+    </section>
+
+    <!-- ============ CARD PREVIEW (original design, unchanged) ============ -->
+    <section class="card-stage" aria-label="Card preview">
+      <div class="library-card" id="library-card">
+
+        <!-- Header -->
+        <div class="card-header">
+          <p class="rule-top">
+            <strong>Keep this book clean</strong>
+            Do not turn down the leaves
+          </p>
+          <p class="rule-sub">
+            Borrowers finding this book pencil marked, written upon,
+            mutilated or unwarrantably defaced, are expected to report it
+            to the librarian.
+          </p>
+        </div>
+
+        <!-- Fields -->
+        <div class="card-fields">
+          <div class="field-row">
+            <span class="field-label">Author</span>
+            <span class="field-value" id="out-author"></span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Title</span>
+            <span class="field-value" id="out-title"></span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Date Due</span>
+            <span class="field-value" id="out-date"></span>
+          </div>
+        </div>
+
+        <!-- Handwritten quote -->
+        <div class="quote-block">
+          <div class="heart heart-1">♡</div>
+          <div class="heart heart-2">♡</div>
+
+          <p class="quote-text" id="out-quote"></p>
+
+          <!-- Underline flourish (inline SVG) -->
+          <svg class="flourish" viewBox="0 0 200 10" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 6 Q50 2 100 6 Q150 10 198 5" />
+          </svg>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

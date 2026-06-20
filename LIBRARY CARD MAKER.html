@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>freedeploy — pick a free host, deploy it</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0d0a;
+    --bg-raised: #11150f;
+    --bg-card: #141811;
+    --line: #262d22;
+    --line-bright: #3a4432;
+    --text: #e9ede2;
+    --text-dim: #9aa68e;
+    --text-faint: #5c6654;
+    --signal: #6dffa0;
+    --signal-dim: #3a8a5c;
+    --amber: #ffb454;
+    --amber-dim: #8a6a30;
+    --red: #ff6d6d;
+    --mono: 'IBM Plex Mono', monospace;
+    --display: 'Space Grotesk', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(109,255,160,0.06), transparent),
+      var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height:100vh;
+    padding: 32px 20px 80px;
+    line-height:1.5;
+  }
+  .wrap{ max-width: 920px; margin: 0 auto; }
+
+  /* ---- header / terminal chrome ---- */
+  .titlebar{
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:28px;
+  }
+  .dot{ width:11px; height:11px; border-radius:50%; }
+  .dot.r{ background:#ff6d6d44; border:1px solid #ff6d6d88; }
+  .dot.y{ background:#ffb45444; border:1px solid #ffb45488; }
+  .dot.g{ background:#6dffa044; border:1px solid #6dffa088; }
+  .titlebar .path{ color: var(--text-faint); font-size:12.5px; margin-left:8px; letter-spacing:0.02em; }
+
+  .hero{
+    border:1px solid var(--line);
+    background: var(--bg-raised);
+    border-radius:10px;
+    padding: 30px 28px 26px;
+    margin-bottom: 22px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(109,255,160,0.05), transparent 40%);
+    pointer-events:none;
+  }
+  .eyebrow{
+    font-size:11.5px; letter-spacing:0.14em; text-transform:uppercase;
+    color: var(--signal); margin-bottom:14px; display:flex; align-items:center; gap:8px;
+  }
+  .eyebrow::before{ content:"$"; color: var(--text-faint); }
+  h1{
+    font-family: var(--display);
+    font-weight:700;
+    font-size: clamp(28px, 4.4vw, 42px);
+    letter-spacing:-0.01em;
+    line-height:1.08;
+    margin-bottom:14px;
+  }
+  h1 .accent{ color: var(--signal); }
+  .sub{
+    color: var(--text-dim);
+    font-size:14.5px;
+    max-width: 56ch;
+    margin-bottom: 22px;
+  }
+  .sub b{ color:var(--text); font-weight:600; }
+
+  .cmdrow{
+    display:flex; gap:10px; flex-wrap:wrap;
+  }
+  .cmd{
+    font-size:12.5px;
+    color: var(--text-dim);
+    background: #0c0f0a;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:7px 11px;
+  }
+  .cmd b{ color: var(--signal); font-weight:600; }
+
+  /* ---- input panel ---- */
+  .panel{
+    border:1px solid var(--line);
+    background: var(--bg-card);
+    border-radius:10px;
+    padding: 22px 24px 24px;
+    margin-bottom: 22px;
+  }
+  .panel h2{
+    font-family:var(--display);
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color: var(--text-dim);
+    margin-bottom:14px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+  }
+  .tabs{ display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+  .tab{
+    font-family:var(--mono); font-size:12.5px; color:var(--text-dim);
+    background:transparent; border:1px solid var(--line); border-radius:6px;
+    padding:7px 12px; cursor:pointer; transition: all .15s ease;
+  }
+  .tab:hover{ border-color: var(--line-bright); color:var(--text); }
+  .tab.active{ color:#0a0d0a; background:var(--signal); border-color:var(--signal); font-weight:600; }
+
+  textarea{
+    width:100%; min-height:150px;
+    background:#080a07; color:var(--text);
+    border:1px solid var(--line); border-radius:8px;
+    padding:14px; font-family:var(--mono); font-size:13px;
+    resize:vertical; outline:none;
+  }
+  textarea:focus{ border-color: var(--signal-dim); }
+  textarea::placeholder{ color: var(--text-faint); }
+
+  .pickgrid{
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr));
+    gap:8px;
+  }
+  .pick{
+    border:1px solid var(--line); background:#0c0f0a; border-radius:7px;
+    padding:11px 12px; cursor:pointer; transition: all .15s ease;
+    font-size:13px; color:var(--text-dim);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .pick:hover{ border-color:var(--line-bright); color:var(--text); }
+  .pick.sel{ border-color:var(--signal); color:var(--signal); background:rgba(109,255,160,0.06); }
+  .pick small{ color:var(--text-faint); font-size:10.5px; }
+  .pick.sel small{ color:var(--signal-dim); }
+
+  .runbtn{
+    margin-top:18px;
+    width:100%;
+    font-family:var(--mono); font-weight:600; font-size:14px;
+    background: var(--signal); color:#08110b;
+    border:none; border-radius:8px;
+    padding:13px 16px; cursor:pointer;
+    letter-spacing:0.02em;
+    transition: transform .12s ease, box-shadow .12s ease;
+    box-shadow: 0 0 0 0 rgba(109,255,160,0.0);
+  }
+  .runbtn:hover{ transform: translateY(-1px); box-shadow: 0 6px 22px -6px rgba(109,255,160,0.45); }
+  .runbtn:active{ transform: translateY(0px); }
+  .runbtn:disabled{ opacity:0.45; cursor:not-allowed; transform:none; box-shadow:none; }
+
+  /* ---- output: terminal log ---- */
+  .term{
+    border:1px solid var(--line); background:#070907; border-radius:10px;
+    padding:18px 20px; margin-bottom:22px; display:none;
+    font-size:13px;
+  }
+  .term.show{ display:block; }
+  .term .line{ color:var(--text-dim); white-space:pre-wrap; margin-bottom:2px; }
+  .term .line.ok{ color: var(--signal); }
+  .term .line.dim{ color: var(--text-faint); }
+  .caret{ display:inline-block; width:7px; height:13px; background:var(--signal); vertical-align:-2px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  /* ---- results ---- */
+  .resultsHead{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:14px; flex-wrap:wrap; gap:8px; display:none;
+  }
+  .resultsHead.show{ display:flex; }
+  .resultsHead h2{ font-family:var(--display); font-size:18px; }
+  .resultsHead .meta{ color:var(--text-faint); font-size:12px; }
+
+  .cards{ display:none; flex-direction:column; gap:12px; margin-bottom:24px; }
+  .cards.show{ display:flex; }
+
+  .card{
+    border:1px solid var(--line); background: var(--bg-card);
+    border-radius:10px; padding:18px 20px;
+    display:grid; grid-template-columns: 40px 1fr auto;
+    gap:16px; align-items:start;
+    position:relative; overflow:hidden;
+    transition: border-color .15s ease;
+  }
+  .card:hover{ border-color: var(--line-bright); }
+  .card.top{ border-color: var(--signal-dim); }
+  .card.top::before{
+    content:"TOP PICK"; position:absolute; top:0; right:0;
+    font-size:9.5px; letter-spacing:0.1em; color:#08110b; background:var(--signal);
+    padding:3px 9px 3px 11px; border-radius:0 0 0 8px; font-weight:700;
+  }
+  .rank{
+    font-family:var(--display); font-weight:700; font-size:20px;
+    color: var(--text-faint); line-height:1;
+  }
+  .card.top .rank{ color: var(--signal); }
+  .cardbody h3{ font-family:var(--display); font-size:16.5px; margin-bottom:5px; display:flex; align-items:center; gap:9px; }
+  .badge{
+    font-size:10px; letter-spacing:0.04em; padding:2px 7px; border-radius:4px;
+    border:1px solid var(--line-bright); color:var(--text-dim); font-weight:500; text-transform:uppercase;
+  }
+  .badge.free{ color:var(--signal); border-color:var(--signal-dim); }
+  .summary{ color:var(--text-dim); font-size:13px; margin-bottom:9px; line-height:1.55; }
+  .autorow{ display:flex; align-items:center; gap:7px; font-size:12px; }
+  .autodot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .autodot.full{ background:var(--signal); }
+  .autodot.once{ background:var(--amber); }
+  .autotext{ color: var(--text-faint); }
+  .autotext b{ color: var(--text-dim); font-weight:600; }
+
+  .deploybtn{
+    align-self:center;
+    font-family:var(--mono); font-size:12px; font-weight:600;
+    background:transparent; color:var(--text);
+    border:1px solid var(--line-bright); border-radius:7px;
+    padding:9px 14px; cursor:pointer; white-space:nowrap;
+    transition: all .15s ease;
+  }
+  .deploybtn:hover{ border-color:var(--signal); color:var(--signal); background:rgba(109,255,160,0.06); }
+
+  /* deploy detail */
+  .detail{
+    display:none; grid-column: 1 / -1; margin-top:8px; padding-top:14px;
+    border-top:1px dashed var(--line);
+  }
+  .detail.show{ display:block; }
+  .detail ol{ padding-left:20px; color:var(--text-dim); font-size:12.5px; }
+  .detail li{ margin-bottom:7px; }
+  .detail code, .summary code{
+    background:#0c0f0a; border:1px solid var(--line); color:var(--signal);
+    padding:1px 6px; border-radius:4px; font-size:12px;
+  }
+
+  .honestbox{
+    border:1px solid var(--line); border-radius:10px; padding:18px 20px;
+    background: var(--bg-raised); display:none; margin-bottom:8px;
+  }
+  .honestbox.show{ display:block; }
+  .honestbox h4{ font-family:var(--display); font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:8px; }
+  .honestbox p{ color:var(--text-faint); font-size:12.5px; line-height:1.6; }
+  .honestbox p + p{ margin-top:8px; }
+
+  footer{ text-align:center; margin-top:40px; color:var(--text-faint); font-size:11.5px; }
+  footer a{ color: var(--text-dim); }
+
+  @media (max-width:560px){
+    .card{ grid-template-columns: 28px 1fr; }
+    .deploybtn{ grid-column: 1/-1; justify-self:start; margin-top:4px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="titlebar">
+    <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+    <span class="path">~/your-project — freedeploy</span>
+  </div>
+
+  <div class="hero">
+    <div class="eyebrow">freedeploy v1.0.0</div>
+    <h1>Pick a free host.<br><span class="accent">Ship it.</span> No card, ever.</h1>
+    <p class="sub">Paste your <b>package.json</b> (or pick your stack manually), and freedeploy ranks the best <b>free-forever</b> host for it — then hands you the exact deploy steps. Facts verified June 2026.</p>
+    <div class="cmdrow">
+      <div class="cmd"><b>freedeploy</b> — detect + recommend</div>
+      <div class="cmd"><b>freedeploy deploy</b> — ship the top pick</div>
+      <div class="cmd"><b>freedeploy list</b> — see all platforms</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>1 / detect your project</h2>
+    <div class="tabs">
+      <button class="tab active" data-mode="paste">Paste package.json</button>
+      <button class="tab" data-mode="manual">Pick manually</button>
+    </div>
+
+    <div id="pasteMode">
+      <textarea id="pkgInput" spellcheck="false" placeholder='{
+  "dependencies": {
+    "next": "^14.0.0"
+  }
+}
+
+...or paste requirements.txt / go.mod / Gemfile content — freedeploy reads any of those too.'></textarea>
+    </div>
+
+    <div id="manualMode" style="display:none;">
+      <div class="pickgrid" id="manualGrid"></div>
+    </div>
+
+    <button class="runbtn" id="runBtn">▸ Run freedeploy</button>
+  </div>
+
+  <div class="term" id="term"></div>
+
+  <div class="resultsHead" id="resultsHead">
+    <h2 id="resultsTitle">Best free-forever options, ranked</h2>
+    <span class="meta" id="resultsMeta"></span>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="honestbox" id="honestbox">
+    <h4>What's actually automated</h4>
+    <p>Everything except the literal login screen on each platform. That gate is each platform's anti-bot mechanism — not an oversight — so freedeploy never scripts past it; it gets you to one command or one click, then the deploy itself is one line forever after.</p>
+    <p>If "no signup at all" matters most: <b style="color:var(--text-dim)">GitHub Pages</b> reuses the GitHub login you already have. Every push to <code>main</code> deploys automatically, with no extra account ever created.</p>
+  </div>
+
+  <footer>freedeploy — MIT licensed · Node 18+ · facts in <a href="#">lib/recommend.js</a> verified June 2026, re-check after a few months</footer>
+</div>
+
+<script>
+/* ---------------- ported logic from lib/detect.js + lib/recommend.js ---------------- */
+
+const PLATFORM_FACTS = {
+  "cloudflare-pages": { name:"Cloudflare Pages", goodFor:["static-html","vite","create-react-app","astro","next-static","node-build-only","node-other"], needsServer:false, cardRequired:false, summary:"Unlimited bandwidth, 500 builds/month, free forever, no card on file.", automation:"one-time-login",
+    steps:["Run <code>npx wrangler login</code> once — opens a browser, no signup screen beyond your existing Cloudflare account.","freedeploy runs <code>npx wrangler pages deploy &lt;dir&gt; --project-name &lt;name&gt;</code> for you.","Every future deploy is that same one command."] },
+  "github-pages": { name:"GitHub Pages", goodFor:["static-html","vite","create-react-app","astro","next-static","node-build-only","node-other"], needsServer:false, cardRequired:false, summary:"Free forever, unlimited for public repos, reuses your existing GitHub login — zero extra signup.", automation:"fully-automatic",
+    steps:["freedeploy writes <code>.github/workflows/freedeploy-pages.yml</code> to your repo.","<code>git push</code> — that commit triggers the first deploy.","Settings → Pages → Source → 'GitHub Actions' (one click, one time — or automatic if you have <code>gh</code> CLI authed).","Every push to <code>main</code> after this deploys with zero further action."] },
+  "netlify": { name:"Netlify", goodFor:["static-html","vite","create-react-app","astro","next-static","node-build-only","node-other"], needsServer:false, cardRequired:false, summary:"Generous free tier (100GB bandwidth/month, 300 build min/month), no card required.", automation:"one-time-login",
+    steps:["Run <code>npx netlify login</code> once.","freedeploy runs <code>npx netlify deploy --prod --dir &lt;dir&gt;</code> for you.","Future deploys: same one command."] },
+  "vercel": { name:"Vercel", goodFor:["next","vite","create-react-app","astro","static-html","node-build-only","node-other"], needsServer:false, cardRequired:false, summary:"Best DX for Next.js specifically, generous Hobby tier, no card. Hobby tier is for non-commercial use per Vercel's terms.", automation:"one-time-login",
+    steps:["Run <code>npx vercel login</code> once.","freedeploy runs <code>npx vercel --prod --yes</code> for you.","Future deploys: same one command."] },
+  "render": { name:"Render", goodFor:["node-server","flask","django","fastapi","go","rails","ruby-other","python-other","node-other"], needsServer:true, cardRequired:false, summary:"750 free compute hours/month, no card. Free web services sleep after 15 min idle (30–60s cold start on wake).", automation:"one-time-login",
+    steps:["freedeploy writes a <code>render.yaml</code> blueprint matched to your runtime.","Push it to GitHub, then in Render's dashboard: New + → Blueprint → select the repo (one time).","Or export <code>RENDER_API_KEY</code> once and freedeploy creates the service via API — no dashboard at all.","Every push after that auto-deploys."] },
+  "cloudflare-workers": { name:"Cloudflare Workers", goodFor:["node-server"], needsServer:true, cardRequired:false, summary:"100K requests/day free, no card. Best for lightweight APIs, not full traditional servers (no persistent filesystem).", automation:"one-time-login",
+    steps:["Run <code>npx wrangler login</code> once.","freedeploy scaffolds a Worker entry and deploys with <code>wrangler deploy</code>.","Future deploys: same one command."] },
+};
+
+function mapFrameworkToFactsKey(d){
+  if (d.framework === "next" && !d.needsServer) return "next-static";
+  return d.framework;
+}
+
+function recommend(detectResult){
+  const key = mapFrameworkToFactsKey(detectResult);
+  const candidates = Object.entries(PLATFORM_FACTS)
+    .filter(([,f]) => f.goodFor.includes(key) && f.needsServer === detectResult.needsServer)
+    .map(([id,f]) => ({ id, ...f }));
+  const priority = detectResult.needsServer
+    ? ["render","cloudflare-workers"]
+    : detectResult.framework === "next" && !detectResult.needsServer
+    ? ["vercel","cloudflare-pages","github-pages","netlify"]
+    : ["cloudflare-pages","github-pages","netlify","vercel"];
+  candidates.sort((a,b) => priority.indexOf(a.id) - priority.indexOf(b.id));
+  return candidates;
+}
+
+// manual picks -> synthetic detectResult
+const MANUAL_OPTIONS = [
+  { label:"Static HTML", sub:"no build step", framework:"static-html", language:"html", needsServer:false },
+  { label:"Vite", sub:"React / Vue / Svelte", framework:"vite", language:"node", needsServer:false },
+  { label:"Create React App", sub:"react-scripts", framework:"create-react-app", language:"node", needsServer:false },
+  { label:"Astro", sub:"static output", framework:"astro", language:"node", needsServer:false },
+  { label:"Next.js (static)", sub:"output: export", framework:"next", language:"node", needsServer:false },
+  { label:"Next.js (server)", sub:"SSR / API routes", framework:"next", language:"node", needsServer:true },
+  { label:"Express / Node", sub:"long-running server", framework:"node-server", language:"node", needsServer:true },
+  { label:"Flask", sub:"python", framework:"flask", language:"python", needsServer:true },
+  { label:"Django", sub:"python", framework:"django", language:"python", needsServer:true },
+  { label:"FastAPI", sub:"python", framework:"fastapi", language:"python", needsServer:true },
+  { label:"Go", sub:"go.mod", framework:"go", language:"go", needsServer:true },
+  { label:"Rails", sub:"ruby", framework:"rails", language:"ruby", needsServer:true },
+];
+
+function detectFromPastedText(raw){
+  const result = { framework:"unknown", language:"unknown", needsServer:false };
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  // try JSON (package.json) first
+  try {
+    const pkg = JSON.parse(trimmed);
+    const deps = { ...(pkg.dependencies||{}), ...(pkg.devDependencies||{}) };
+    if (deps.next){
+      result.framework="next"; result.language="node";
+      result.needsServer = !/output:\s*['"]export['"]/.test(raw);
+    } else if (deps.vite){ result.framework="vite"; result.language="node"; result.needsServer=false; }
+    else if (deps["react-scripts"]){ result.framework="create-react-app"; result.language="node"; result.needsServer=false; }
+    else if (deps.astro){ result.framework="astro"; result.language="node"; result.needsServer=false; }
+    else if (deps.express||deps.koa||deps.fastify||deps["@nestjs/core"]){ result.framework="node-server"; result.language="node"; result.needsServer=true; }
+    else if (pkg.scripts && pkg.scripts.build){ result.framework="node-build-only"; result.language="node"; result.needsServer=false; }
+    else { result.framework="node-other"; result.language="node"; result.needsServer = !!(pkg.scripts && pkg.scripts.start); }
+    return result;
+  } catch(e){ /* not JSON, fall through */ }
+
+  // text-based heuristics for requirements.txt / go.mod / Gemfile / index.html
+  if (/^module\s+\S+/m.test(trimmed) || /go\s+1\.\d+/.test(trimmed)){
+    result.language="go"; result.framework="go"; result.needsServer=true; return result;
+  }
+  if (/^source\s+['"]https:\/\/rubygems/m.test(trimmed) || /gem\s+['"]rails['"]/.test(trimmed)){
+    result.language="ruby"; result.framework = /rails/i.test(trimmed) ? "rails" : "ruby-other"; result.needsServer=true; return result;
+  }
+  if (/flask|django|fastapi/i.test(trimmed) && /==|>=|^\w/.test(trimmed)){
+    result.language="python";
+    result.framework = /django/i.test(trimmed) ? "django" : /fastapi/i.test(trimmed) ? "fastapi" : "flask";
+    result.needsServer=true; return result;
+  }
+  if (/<html/i.test(trimmed)){
+    result.framework="static-html"; result.language="html"; result.needsServer=false; return result;
+  }
+  return null;
+}
+
+/* ---------------- UI wiring ---------------- */
+
+const tabs = document.querySelectorAll(".tab");
+const pasteMode = document.getElementById("pasteMode");
+const manualMode = document.getElementById("manualMode");
+let mode = "paste";
+let manualSel = null;
+
+tabs.forEach(t => t.addEventListener("click", () => {
+  tabs.forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  mode = t.dataset.mode;
+  pasteMode.style.display = mode === "paste" ? "block" : "none";
+  manualMode.style.display = mode === "manual" ? "block" : "none";
+}));
+
+const manualGrid = document.getElementById("manualGrid");
+MANUAL_OPTIONS.forEach((opt, i) => {
+  const el = document.createElement("div");
+  el.className = "pick";
+  el.innerHTML = `<span>${opt.label}<br><small>${opt.sub}</small></span>`;
+  el.addEventListener("click", () => {
+    document.querySelectorAll(".pick").forEach(p=>p.classList.remove("sel"));
+    el.classList.add("sel");
+    manualSel = opt;
+  });
+  manualGrid.appendChild(el);
+});
+
+const runBtn = document.getElementById("runBtn");
+const term = document.getElementById("term");
+const resultsHead = document.getElementById("resultsHead");
+const resultsTitle = document.getElementById("resultsTitle");
+const resultsMeta = document.getElementById("resultsMeta");
+const cardsEl = document.getElementById("cards");
+const honestbox = document.getElementById("honestbox");
+
+function termLine(text, cls, delay){
+  return new Promise(res => {
+    setTimeout(() => {
+      const d = document.createElement("div");
+      d.className = "line" + (cls ? " "+cls : "");
+      d.textContent = text;
+      term.appendChild(d);
+      res();
+    }, delay);
+  });
+}
+
+async function runDetection(){
+  cardsEl.classList.remove("show");
+  cardsEl.innerHTML = "";
+  resultsHead.classList.remove("show");
+  honestbox.classList.remove("show");
+  term.innerHTML = "";
+  term.classList.add("show");
+  runBtn.disabled = true;
+  runBtn.textContent = "▸ running…";
+
+  let detectResult;
+  if (mode === "paste"){
+    const raw = document.getElementById("pkgInput").value;
+    detectResult = detectFromPastedText(raw);
+    if (!detectResult){
+      await termLine("$ freedeploy", "dim", 80);
+      await termLine("Couldn't parse that as package.json, requirements.txt, go.mod, or Gemfile.", null, 250);
+      await termLine("Try the 'Pick manually' tab instead.", "dim", 200);
+      runBtn.disabled = false; runBtn.textContent = "▸ Run freedeploy";
+      return;
+    }
+  } else {
+    if (!manualSel){
+      await termLine("$ freedeploy", "dim", 80);
+      await termLine("Pick a stack above first.", null, 250);
+      runBtn.disabled = false; runBtn.textContent = "▸ Run freedeploy";
+      return;
+    }
+    detectResult = { framework: manualSel.framework, language: manualSel.language, needsServer: manualSel.needsServer };
+  }
+
+  const picks = recommend(detectResult);
+
+  await termLine("$ freedeploy", "dim", 60);
+  await termLine(`Detected: ${detectResult.framework} (${detectResult.language})${detectResult.needsServer ? " — needs a running server" : " — static output"}`, "ok", 350);
+  await termLine(`Matched ${picks.length} free-forever host${picks.length===1?"":"s"}.`, "dim", 300);
+  term.insertAdjacentHTML("beforeend", `<span class="line dim">▸ <span class="caret"></span></span>`);
+
+  resultsTitle.textContent = picks.length ? "Best free-forever options, ranked" : "No confident match";
+  resultsMeta.textContent = `${detectResult.framework} · ${detectResult.language}${detectResult.needsServer ? " · server" : " · static"}`;
+  resultsHead.classList.add("show");
+
+  if (picks.length === 0){
+    cardsEl.innerHTML = `<div class="panel" style="margin:0;">Couldn't confidently match this project type. Try <b>freedeploy list</b> to see every platform and pick manually.</div>`;
+    cardsEl.classList.add("show");
+    runBtn.disabled = false; runBtn.textContent = "▸ Run freedeploy";
+    return;
+  }
+
+  picks.forEach((p, i) => {
+    const card = document.createElement("div");
+    card.className = "card" + (i===0 ? " top" : "");
+    const autoFull = p.automation === "fully-automatic";
+    card.innerHTML = `
+      <div class="rank">${String(i+1).padStart(2,"0")}</div>
+      <div class="cardbody">
+        <h3>${p.name} ${p.cardRequired ? "" : `<span class="badge free">no card</span>`}</h3>
+        <div class="summary">${p.summary}</div>
+        <div class="autorow">
+          <span class="autodot ${autoFull?'full':'once'}"></span>
+          <span class="autotext">${autoFull ? "<b>Fully automatic</b> — reuses your GitHub login" : "<b>One-time login</b>, then every deploy is one command"}</span>
+        </div>
+        <div class="detail" id="detail-${p.id}">
+          <ol>${p.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
+        </div>
+      </div>
+      <button class="deploybtn" data-id="${p.id}">View steps</button>
+    `;
+    cardsEl.appendChild(card);
+  });
+  cardsEl.classList.add("show");
+  honestbox.classList.add("show");
+
+  cardsEl.querySelectorAll(".deploybtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      const detail = document.getElementById(`detail-${id}`);
+      const isOpen = detail.classList.contains("show");
+      detail.classList.toggle("show");
+      btn.textContent = isOpen ? "View steps" : "Hide steps";
+    });
+  });
+
+  runBtn.disabled = false;
+  runBtn.textContent = "▸ Run freedeploy";
+}
+
+runBtn.addEventListener("click", runDetection);
+</script>
+</body>
+</html>
